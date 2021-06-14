@@ -11,6 +11,8 @@
 
 #include "Chorus.h"
 
+#define DIFFUSE 1.111111
+
 namespace stk {
 
 Chorus :: Chorus( StkFloat baseDelay )
@@ -23,7 +25,7 @@ Chorus :: Chorus( StkFloat baseDelay )
   baseLength_ = baseDelay;
 
   mods_[0].setFrequency( 0.2 );
-  mods_[1].setFrequency( 0.222222 );
+  mods_[1].setFrequency( 0.2 * DIFFUSE );
   modDepth_ = 0.05;
   effectMix_ = 0.5;
   this->clear();
@@ -50,7 +52,7 @@ void Chorus :: clear( void )
 void Chorus :: setModFrequency( StkFloat frequency )
 {
   mods_[0].setFrequency( frequency );
-  mods_[1].setFrequency( frequency * 1.1111 );
+  mods_[1].setFrequency( frequency * DIFFUSE );
 }
 
 } // stk namespace

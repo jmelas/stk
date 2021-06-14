@@ -2,6 +2,7 @@
 #define STK_SINEWAVE_H
 
 const unsigned long TABLE_SIZE = 2048;
+const double TABLE_SIZEf = 2048.;
 
 #include "Generator.h"
 
@@ -81,18 +82,16 @@ public:
     is defined during compilation, in which case an out-of-range value
     will trigger an StkError exception.
   */
-  StkFrames& tick( StkFrames& frames, unsigned int channel = 0 );
+  StkFrames& tick( StkFrames& frames, unsigned int channel = 0 ) override;
 
 protected:
 
-  void sampleRateChanged( StkFloat newRate, StkFloat oldRate );
+  void sampleRateChanged( StkFloat newRate, StkFloat oldRate ) override;
 
   static StkFrames table_;
   StkFloat time_;
   StkFloat rate_;
   StkFloat phaseOffset_;
-  unsigned int iIndex_;
-  StkFloat alpha_;
 
 };
 
@@ -101,20 +100,19 @@ inline StkFloat SineWave :: tick( void )
   // Check limits of time address ... if necessary, recalculate modulo
   // TABLE_SIZE.
   while ( time_ < 0.0 )
-    time_ += TABLE_SIZE;
-  while ( time_ >= TABLE_SIZE )
-    time_ -= TABLE_SIZE;
+    time_ += TABLE_SIZEf;
+  while ( time_ >= TABLE_SIZEf )
+    time_ -= TABLE_SIZEf;
 
-  iIndex_ = (unsigned int) time_;
-  alpha_ = time_ - iIndex_;
-  StkFloat tmp = table_[ iIndex_ ];
-  tmp += ( alpha_ * ( table_[ iIndex_ + 1 ] - tmp ) );
+  const int index = (int) time_;
+  const StkFloat a = time_ - index;
+  const StkFloat v = std::lerp(table_[index], table_[index+1], a);
 
   // Increment time, which can be negative.
   time_ += rate_;
 
-  lastFrame_[0] = tmp;
-  return lastFrame_[0];
+  lastFrame_[0] = v;
+  return v;
 }
 
 inline StkFrames& SineWave :: tick( StkFrames& frames, unsigned int channel )
@@ -135,14 +133,14 @@ inline StkFrames& SineWave :: tick( StkFrames& frames, unsigned int channel )
     // Check limits of time address ... if necessary, recalculate modulo
     // TABLE_SIZE.
     while ( time_ < 0.0 )
-      time_ += TABLE_SIZE;
-    while ( time_ >= TABLE_SIZE )
-      time_ -= TABLE_SIZE;
+      time_ += TABLE_SIZEf;
+    while ( time_ >= TABLE_SIZEf )
+      time_ -= TABLE_SIZEf;
 
-    iIndex_ = (unsigned int) time_;
-    alpha_ = time_ - iIndex_;
-    tmp = table_[ iIndex_ ];
-    tmp += ( alpha_ * ( table_[ iIndex_ + 1 ] - tmp ) );
+    int index = (int) time_;
+    StkFloat alpha = time_ - index;
+    tmp = table_[index];
+    tmp += ( alpha * ( table_[index + 1 ] - tmp ) );
     *samples = tmp;
 
     // Increment time, which can be negative.
